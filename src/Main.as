@@ -1,24 +1,25 @@
-package {
+package  {
 
 	import flash.display.Sprite;
-	import flash.display.Stage;
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import se.klandestino.flash.debug.Debug;
 	import se.klandestino.flash.debug.loggers.NullLogger;
 	import se.klandestino.flash.debug.loggers.TraceLogger;
+	import se.klandestino.flash.utils.LoaderInfoParams;
+	import se.klandestino.videoplayer.Videoplayer;
 
 	/**
 	 *	Sprite sub class description.
 	 *
 	 *	@langversion ActionScript 3.0
-	 *	@playerversion Flash 9.0
+	 *	@playerversion Flash 10.0
 	 *
 	 *	@author spurge
-	 *	@since  2010-03-31
+	 *	@since  2010-04-01
 	 */
-	public class Videoplayer extends Sprite {
+	public class Main extends Sprite {
 
 		//--------------------------------------
 		// CLASS CONSTANTS
@@ -31,20 +32,32 @@ package {
 		/**
 		 *	@constructor
 		 */
-		public function Videoplayer () {
+		public function Main () {
 			super ();
 
 			Debug.addLogger (new TraceLogger ());
 			//Debug.addLogger (new NullLogger ());
 
+			this.getParams ();
+
+			this.videoplayer = new Videoplayer ();
+			this.addChild (this.videoplayer);
+
 			this.stage.scaleMode = StageScaleMode.NO_SCALE;
 			this.stage.align = StageAlign.TOP_LEFT;
-			this.stage.addEventListener (Event.RESIZE, this.init);
+			this.stage.addEventListener (Event.RESIZE, this.stageResizeHandler, false, 0, true);
+			this.stage.dispatchEvent (new Event (Event.RESIZE));
+
+			this.videoplayer.load (this.url);
+			this.videoplayer.play ();
 		}
 
 		//--------------------------------------
 		//  PRIVATE VARIABLES
 		//--------------------------------------
+
+		private var url:String;
+		private var videoplayer:Videoplayer;
 
 		//--------------------------------------
 		//  GETTER/SETTERS
@@ -58,12 +71,17 @@ package {
 		//  EVENT HANDLERS
 		//--------------------------------------
 
+		private function stageResizeHandler (event:Event):void {
+			this.videoplayer.resize (this.stage.stageWidth, this.stage.stageHeight);
+		}
+
 		//--------------------------------------
 		//  PRIVATE & PROTECTED INSTANCE METHODS
 		//--------------------------------------
 
-		private function init (event:Event = null):void {
-			this.stage.removeEventListener (Event.RESIZE, this.init);
+		private function getParams ():void {
+			this.url = LoaderInfoParams.getParam (this.stage.loaderInfo, 'url', '');
 		}
+
 	}
 }

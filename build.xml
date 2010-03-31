@@ -13,7 +13,7 @@
 			<arg line="-default-frame-rate=24" />
 			<arg line="-use-network=true" />
 			<arg line="-output '${deploy.dir}/videoplayer.swf'" />
-			<arg line="${src.dir}/Videoplayer.as" />
+			<arg line="${src.dir}/Main.as" />
 		</exec>
 	</target>
 </project>
