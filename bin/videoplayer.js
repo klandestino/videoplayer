@@ -1,8 +1,8 @@
 var videoplayer = {
 	pattern: '*[data_videoplayer]',
 	swf: 'videoplayer.swf',
-	width: 600,
-	height: 400,
+	width: 320,
+	height: 240,
 
 	init: function () {
 		if (typeof (window ['swfobject']) != 'undefined' && typeof (window ['jQuery']) != 'undefined') {
@@ -27,15 +27,19 @@ var videoplayer = {
 			}
 		}
 
-		jElm.width (videoplayer.width);
-		jElm.height (videoplayer.height);
-
 		var params = {
-			url: jElm.attr ('data_videoplayer')
+			url: jElm.attr ('data_videoplayer'),
+			repeat: jElm.attr ('data_repeat'),
+			autoplay: jElm.attr ('data_autoplay')
 		};
 
 		jElm.replaceWith ('<div id="' + id + '"></div>');
-		swfobject.embedSWF (videoplayer.swf, id, videoplayer.width, videoplayer.height, '10.0.0', null, params);
+		swfobject.embedSWF (
+			videoplayer.swf, id,
+			jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width,
+			jElm.attr ('height') != null ? jElm.attr ('height') : videoplayer.height,
+			'10.0.0', null, params
+		);
 
 		if (params.callback != null) {
 			eval (params.callback + '("started", {id:"' + id + '"});');

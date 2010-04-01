@@ -47,10 +47,15 @@ package se.klandestino.videoplayer {
 		//  PRIVATE VARIABLES
 		//--------------------------------------
 
+		private var _buffer:uint = 2;
+		private var bufferFull:Boolean = false;
 		private var connection:NetConnection;
+		private var _duration:Number = 0;
 		private var _loaded:Boolean;
+		private var playbackStop:Boolean = true;
 		private var postConnectActions:Array;
 		private var postLoadActions:Array;
+		private var _repeat:Boolean = false;
 		private var stream:NetStream;
 		private var streamClient:NetStreamClient;
 		private var _url:String = '';
@@ -60,8 +65,28 @@ package se.klandestino.videoplayer {
 		//  GETTER/SETTERS
 		//--------------------------------------
 
+		public function get buffer ():uint {
+			return this._buffer;
+		}
+
+		public function set buffer (val:uint):void {
+			this._buffer = val;
+		}
+
+		public function get duration ():Number {
+			return this._duration;
+		}
+
 		public function get loaded ():Boolean {
 			return (this._loaded && this.stream);
+		}
+
+		public function get repeat ():Boolean {
+			return this._repeat;
+		}
+
+		public function set repeat (val:Boolean):void {
+			this._repeat = val;
 		}
 
 		public function get url ():String {
@@ -135,6 +160,18 @@ package se.klandestino.videoplayer {
 			}
 		}
 
+		public function seek (sec:uint):void {
+			Debug.debug ('Seek by ' + sec);
+
+			if (this.loaded) {
+				if (sec < this.duration) {
+					this.stream.seek (sec);
+				} else {
+					Debug.warn (sec + ' is higher than duration ' + this.duration);
+				}
+			}
+		}
+
 		public function stop ():void {
 			Debug.debug ('Stopping video from ' + this.url);
 
@@ -197,19 +234,59 @@ package se.klandestino.videoplayer {
 
 			for (var key:String in event.info) {
 				data += "\n" + key + ': ' + event.info [key];
+
+				switch (key) {
+					case 'duration':
+						this._duration = event.info [key];
+						break;
+				}
 			}
 
 			Debug.debug (data);
 		}
 
 		private function streamNetStatusHandler (event:NetStatusEvent):void {
-			var data:String = 'Net Status';
+			Debug.debug (event.info.code);
 
-			for (var key:String in event.info) {
-				data += "\n" + key + ': ' + event.info [key];
+			switch (event.info.code) {
+				case 'NetStream.Play.Start':
+					this.playbackStop = false;
+					this.bufferFull = false;
+					break;
+
+				case 'NetStream.Play.Stop':
+					this.playbackStop = true;
+
+					if (this.bufferFull) {
+						Debug.debug ('Still data in buffer, waiting to stop until buffer is empty');
+					} else if (this.buffer > this.duration) {
+						Debug.debug ('Buffer (' + this.buffer + ') is longer than duration (' + this.duration + ')');
+						if (this.repeat) {
+							Debug.debug ('Repeating');
+							this.seek (0);
+						} else {
+							this.stop ();
+						}
+					}
+
+					break;
+				case 'NetStream.Buffer.Empty':
+					if (this.playbackStop) {
+						if (this.repeat) {
+							Debug.debug ('Playback stopped, repeating playback');
+							this.seek (0);
+						} else {
+							Debug.debug ('Playback stopped, stopping playback');
+							this.stop ();
+						}
+					} else {
+						this.bufferFull = false;
+					}
+					break;
+				case 'NetStream.Buffer.Full':
+					this.bufferFull = true;
+					break;
 			}
-
-			Debug.debug (data);
 		}
 
 		private function streamPlayStatusHandler (event:NetStreamClientEvent):void {

@@ -41,6 +41,8 @@ package  {
 			this.getParams ();
 
 			this.videoplayer = new Videoplayer ();
+			this.videoplayer.repeat = this.repeat;
+			this.videoplayer.load (this.url);
 			this.addChild (this.videoplayer);
 
 			this.stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -48,14 +50,20 @@ package  {
 			this.stage.addEventListener (Event.RESIZE, this.stageResizeHandler, false, 0, true);
 			this.stage.dispatchEvent (new Event (Event.RESIZE));
 
-			this.videoplayer.load (this.url);
-			this.videoplayer.play ();
+			if (this.autoplay) {
+				Debug.debug ('Autoplay is true, start playing');
+				this.videoplayer.play ();
+			} else {
+				Debug.debug ('Autoplay is false, waiting for interaction to start playing');
+			}
 		}
 
 		//--------------------------------------
 		//  PRIVATE VARIABLES
 		//--------------------------------------
 
+		private var autoplay:Boolean = true;
+		private var repeat:Boolean = false;
 		private var url:String;
 		private var videoplayer:Videoplayer;
 
@@ -80,6 +88,8 @@ package  {
 		//--------------------------------------
 
 		private function getParams ():void {
+			this.autoplay = LoaderInfoParams.getParam (this.stage.loaderInfo, 'autoplay', this.autoplay);
+			this.repeat = LoaderInfoParams.getParam (this.stage.loaderInfo, 'repeat', this.repeat);
 			this.url = LoaderInfoParams.getParam (this.stage.loaderInfo, 'url', '');
 		}
 
