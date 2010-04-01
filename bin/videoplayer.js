@@ -28,21 +28,31 @@ var videoplayer = {
 		}
 
 		var params = {
+			callback: 'videoplayer.generateCallback ("' + id + '")',
 			url: jElm.attr ('data_videoplayer'),
-			repeat: jElm.attr ('data_repeat'),
-			autoplay: jElm.attr ('data_autoplay')
+			autoplay: jElm.attr ('data_autoplay'),
+			autoplay: jElm.attr ('data_autosize'),
+			repeat: jElm.attr ('data_repeat')
 		};
 
 		jElm.replaceWith ('<div id="' + id + '"></div>');
-		swfobject.embedSWF (
-			videoplayer.swf, id,
-			jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width,
-			jElm.attr ('height') != null ? jElm.attr ('height') : videoplayer.height,
-			'10.0.0', null, params
-		);
+		swfobject.embedSWF (videoplayer.swf, id, '100%', '100%', '10.0.0', null, params);
+		jQuery ('#' + id).width (jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width);
+		jQuery ('#' + id).height (jElm.attr ('height') != null ? jElm.attr ('height') : videoplayer.height);
 
 		if (params.callback != null) {
-			eval (params.callback + '("started", {id:"' + id + '"});');
+			eval (params.callback + '("started", "' + id + '");');
+		}
+	},
+
+	generateCallback: function (id) {
+		return function (type, args) {
+			switch (type) {
+				case 'resize':
+					jQuery ('#' + id).width (args [0]);
+					jQuery ('#' + id).height (args [1]);
+					break;
+			}
 		}
 	}
 }

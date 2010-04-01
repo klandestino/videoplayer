@@ -60,6 +60,8 @@ package se.klandestino.videoplayer {
 		private var streamClient:NetStreamClient;
 		private var _url:String = '';
 		private var video:Video;
+		private var _videoHeight:Number;
+		private var _videoWidth:Number;
 
 		//--------------------------------------
 		//  GETTER/SETTERS
@@ -77,6 +79,18 @@ package se.klandestino.videoplayer {
 			return this._duration;
 		}
 
+		override public function get height ():Number {
+			return this.video != null ? this.video.height : 0;
+		}
+
+		override public function set height (val:Number):void {
+			Debug.debug ('Setting new height for video by ' + width);
+
+			if (this.video != null) {
+				this.video.height = val;
+			}
+		}
+
 		public function get loaded ():Boolean {
 			return (this._loaded && this.stream);
 		}
@@ -91,6 +105,26 @@ package se.klandestino.videoplayer {
 
 		public function get url ():String {
 			return this._url;
+		}
+
+		override public function get width ():Number {
+			return this.video != null ? this.video.width : 0;
+		}
+
+		override public function set width (val:Number):void {
+			Debug.debug ('Setting new width for video by ' + width);
+
+			if (this.video != null) {
+				this.video.width = val;
+			}
+		}
+
+		public function get videoHeight ():Number {
+			return this._videoHeight > 0 ? this._videoHeight : this.height;
+		}
+
+		public function get videoWidth ():Number {
+			return this._videoWidth > 0 ? this._videoWidth : this.width;
 		}
 
 		//--------------------------------------
@@ -182,13 +216,9 @@ package se.klandestino.videoplayer {
 			}
 		}
 
-		public function resize (width:Number, height:Number):void {
-			Debug.debug ('Setting new size for video by ' + width + 'x' + height);
-
-			if (this.video != null) {
-				this.video.width = this.stage.stageWidth;
-				this.video.height = this.stage.stageHeight;
-			}
+		public function setSizeByVideo ():void {
+			this.width = this.videoWidth;
+			this.height = this.videoHeight;
 		}
 
 		//--------------------------------------
@@ -239,7 +269,28 @@ package se.klandestino.videoplayer {
 					case 'duration':
 						this._duration = event.info [key];
 						break;
+					case 'width':
+						if (!isNaN (parseInt (event.info [key]))) {
+							this._videoWidth = parseInt (event.info [key]);
+							Debug.debug ('Width found, setting video width to ' + this._videoWidth);
+						} else {
+							Debug.warn ('Width found, but not as an integer ' + event.info [key]);
+						}
+						break;
+					case 'height':
+						if (!isNaN (parseInt (event.info [key]))) {
+							this._videoHeight = parseInt (event.info [key]);
+							Debug.debug ('Height found, setting video height to ' + this._videoHeight);
+						} else {
+							Debug.warn ('Height found, but not as an integer ' + event.info [key]);
+						}
+						break;
 				}
+			}
+
+			if (this._videoWidth > 0 && this._videoHeight > 0) {
+				Debug.debug ('New size found, dispatch resize event');
+				this.dispatchEvent (new Event (Event.RESIZE));
 			}
 
 			Debug.debug (data);
@@ -285,6 +336,9 @@ package se.klandestino.videoplayer {
 					break;
 				case 'NetStream.Buffer.Full':
 					this.bufferFull = true;
+					break;
+				case 'NetStream.Play.FileStructureInvalid':
+					//
 					break;
 			}
 		}
