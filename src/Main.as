@@ -58,6 +58,7 @@ package  {
 			this.videoplayer.addEventListener (VideoplayerEvent.BUFFER_EMPTY, this.videoBufferEmptyHandler, false, 0, true);
 			this.videoplayer.addEventListener (VideoplayerEvent.BUFFER_FULL, this.videoBufferFullHandler, false, 0, true);
 			this.videoplayer.addEventListener (VideoplayerEvent.LOADED, this.videoLoadedHandler, false, 0, true);
+			this.videoplayer.addEventListener (VideoplayerEvent.STOP, this.videoStopHandler, false, 0, true);
 			this.addChild (this.videoplayer);
 
 			if (!this.videoplayer.loaded) {
@@ -149,6 +150,11 @@ package  {
 
 			this.setupVideoPositions ();
 			this.setupLoaderPositions ();
+		}
+
+		private function videoStopHandler (event:VideoplayerEvent):void {
+			Debug.debug ('Video stopped, removing loader');
+			this.removeLoader ();
 		}
 
 		//--------------------------------------

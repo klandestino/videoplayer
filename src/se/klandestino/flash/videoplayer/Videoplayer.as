@@ -362,8 +362,9 @@ package se.klandestino.flash.videoplayer {
 
 					if (this.bufferFull) {
 						Debug.debug ('Still data in buffer, waiting to stop until buffer is empty');
-					} else if (this.buffer > this.duration) {
-						Debug.debug ('Buffer (' + this.buffer + ') is longer than duration (' + this.duration + ')');
+					} else {
+					//} else if (this.buffer > this.duration) {
+						//Debug.debug ('Buffer (' + this.buffer + ') is longer than duration (' + this.duration + ')');
 						if (this.repeat) {
 							Debug.debug ('Repeating');
 							this.seek (0);
