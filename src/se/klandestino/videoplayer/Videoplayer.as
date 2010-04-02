@@ -336,9 +336,12 @@ package se.klandestino.videoplayer {
 
 					break;
 				case 'NetStream.Buffer.Empty':
+					this.bufferFull = false;
+
 					if (this.playbackStop) {
 						if (this.repeat) {
 							Debug.debug ('Playback stopped, repeating playback');
+							this.playbackStop = false;
 							this.seek (0);
 						} else {
 							Debug.debug ('Playback stopped, stopping playback');
@@ -347,7 +350,6 @@ package se.klandestino.videoplayer {
 					} else {
 						Debug.debug ('Buffer empty, setting up loader until buffer is full again');
 						this.setupLoader ();
-						this.bufferFull = false;
 					}
 					break;
 				case 'NetStream.Buffer.Full':
