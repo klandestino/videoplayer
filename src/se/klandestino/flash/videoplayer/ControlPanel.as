@@ -4,6 +4,9 @@ package se.klandestino.flash.videoplayer {
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.ui.Mouse;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
 	import se.klandestino.flash.debug.Debug;
 	import se.klandestino.flash.net.MultiLoader;
 	import se.klandestino.flash.utils.CoordinationTools;
@@ -26,6 +29,7 @@ package se.klandestino.flash.videoplayer {
 		// CLASS CONSTANTS
 		//--------------------------------------
 
+		public static const MOUSE_HIDE_TIMEOUT:int = 3000;
 		public static const POSITION_BOTTOM:String = 'bottom';
 		public static const POSITION_CENTER:String = 'center';
 		public static const POSITION_LEFT:String = 'left';
@@ -59,6 +63,7 @@ package se.klandestino.flash.videoplayer {
 
 		private var _currentSetup:String = ControlPanel.SETUP_PAUSE;
 		private var loader:MultiLoader;
+		private var mouseTimeout:uint;
 		private var pausebutton:Object;
 		private var playbutton:Object;
 		private var _videoplayer:Videoplayer;
@@ -79,6 +84,7 @@ package se.klandestino.flash.videoplayer {
 			if (this._videoplayer != null) {
 				this._videoplayer.removeEventListener (Event.ENTER_FRAME, this.videoEnterFrameHandler);
 				this._videoplayer.removeEventListener (Event.RESIZE, this.videoResizeHandler);
+				this._videoplayer.removeEventListener (MouseEvent.MOUSE_MOVE, this.videoMouseMoveHandler);
 				this._videoplayer.removeEventListener (VideoplayerEvent.LOADED, this.videoLoadedHandler);
 				this._videoplayer.removeEventListener (VideoplayerEvent.PAUSE, this.videoPauseHandler);
 				this._videoplayer.removeEventListener (VideoplayerEvent.PLAY, this.videoPlayHandler);
@@ -89,6 +95,7 @@ package se.klandestino.flash.videoplayer {
 			this._videoplayer = videoplayer;
 			this._videoplayer.addEventListener (Event.ENTER_FRAME, this.videoEnterFrameHandler, false, 0, true);
 			this._videoplayer.addEventListener (Event.RESIZE, this.videoResizeHandler, false, 0, true);
+			this._videoplayer.addEventListener (MouseEvent.MOUSE_MOVE, this.videoMouseMoveHandler, false, 0, true);
 			this._videoplayer.addEventListener (VideoplayerEvent.LOADED, this.videoLoadedHandler, false, 0, true);
 			this._videoplayer.addEventListener (VideoplayerEvent.PAUSE, this.videoPauseHandler, false, 0, true);
 			this._videoplayer.addEventListener (VideoplayerEvent.PLAY, this.videoPlayHandler, false, 0, true);
@@ -114,11 +121,16 @@ package se.klandestino.flash.videoplayer {
 			switch (setup) {
 				case ControlPanel.SETUP_MOUSE:
 					this._currentSetup = ControlPanel.SETUP_MOUSE;
+					Mouse.show ();
+					clearTimeout (this.mouseTimeout);
+					this.mouseTimeout = setTimeout (this.endMouseSetup, MOUSE_HIDE_TIMEOUT);
 					break;
 				case ControlPanel.SETUP_PAUSE:
+					Mouse.show ();
 					this._currentSetup = ControlPanel.SETUP_PAUSE;
 					break;
 				case ControlPanel.SETUP_PLAY:
+					Mouse.hide ();
 					this._currentSetup = ControlPanel.SETUP_PLAY;
 					break;
 				default:
@@ -194,6 +206,12 @@ package se.klandestino.flash.videoplayer {
 		private function videoLoadedHandler (event:VideoplayerEvent):void {
 			Debug.debug ('Handling loaded event from video');
 			this.visible = true;
+		}
+
+		private function videoMouseMoveHandler (event:MouseEvent):void {
+			if (this.currentSetup == ControlPanel.SETUP_PLAY) {
+				this.setup (ControlPanel.SETUP_MOUSE);
+			}
 		}
 
 		private function videoPauseHandler (event:VideoplayerEvent):void {
@@ -317,6 +335,12 @@ package se.klandestino.flash.videoplayer {
 
 				button.sprite.x = x;
 				button.sprite.y = y;
+			}
+		}
+
+		private function endMouseSetup ():void {
+			if (this.currentSetup == ControlPanel.SETUP_MOUSE) {
+				this.setup (ControlPanel.SETUP_PLAY);
 			}
 		}
 
