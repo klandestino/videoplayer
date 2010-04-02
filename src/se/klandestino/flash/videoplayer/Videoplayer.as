@@ -55,6 +55,7 @@ package se.klandestino.flash.videoplayer {
 		private var playbackStop:Boolean = true;
 		private var postConnectActions:Array;
 		private var postLoadActions:Array;
+		private var preload:Boolean = false;
 		private var _repeat:Boolean = false;
 		private var stream:NetStream;
 		private var streamClient:NetStreamClient;
@@ -175,9 +176,10 @@ package se.klandestino.flash.videoplayer {
 					this._url = url;
 					this.video.attachNetStream (this.stream);
 
-					this._loaded = true;
-					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.LOADED));
-					this.execPostLoadActions ();
+					this.preload = true;
+					this.stream.receiveAudio (false);
+					this.stream.receiveVideo (false);
+					this.stream.play (url);
 				} else {
 					Debug.warn ('Already loading/loaded video from ' + url);
 				}
@@ -190,7 +192,8 @@ package se.klandestino.flash.videoplayer {
 			Debug.debug ('Playing video from ' + this.url);
 
 			if (this.loaded) {
-				this.stream.play (this.url);
+				this.stream.seek (0);
+				this.stream.resume ();
 			} else {
 				this.addPostLoadAction (this.play);
 			}
@@ -317,6 +320,10 @@ package se.klandestino.flash.videoplayer {
 			}
 
 			Debug.debug (data);
+
+			if (this.preload) {
+				this.donePreload ();
+			}
 		}
 
 		private function streamNetStatusHandler (event:NetStatusEvent):void {
@@ -430,6 +437,18 @@ package se.klandestino.flash.videoplayer {
 			}
 		}
 
+		private function donePreload ():void {
+			Debug.debug ('Preloading, meta data found, pausing stream');
+			this.preload = false;
+			this.stream.receiveAudio (true);
+			this.stream.receiveVideo (true);
+			this.stream.pause ();
+			this.stream.seek (0);
+			this._loaded = true;
+			this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.LOADED));
+			this.execPostLoadActions ();
+		}
+
 		private function addPostConnectAction (func:Function, ... args):void {
 			this.postConnectActions.push ({func: func, args: args});
 		}
@@ -440,7 +459,11 @@ package se.klandestino.flash.videoplayer {
 
 		private function execPostConnectActions ():void {
 			for (var i:int = 0, l:int = this.postConnectActions.length; i < l; i++) {
-				this.postConnectActions [i].func (this.postConnectActions [i].args);
+				if (this.postConnectActions [i].args.length > 0) {
+					this.postConnectActions [i].func (this.postConnectActions [i].args);
+				} else {
+					this.postConnectActions [i].func ();
+				}
 			}
 
 			this.postConnectActions = new Array ();
@@ -448,7 +471,11 @@ package se.klandestino.flash.videoplayer {
 
 		private function execPostLoadActions ():void {
 			for (var i:int = 0, l:int = this.postLoadActions.length; i < l; i++) {
-				this.postLoadActions [i].func (this.postLoadActions [i].args);
+				if (this.postLoadActions [i].args.length > 0) {
+					this.postLoadActions [i].func (this.postLoadActions [i].args);
+				} else {
+					this.postLoadActions [i].func ();
+				}
 			}
 
 			this.postLoadActions = new Array ();
