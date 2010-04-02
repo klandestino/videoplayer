@@ -140,6 +140,8 @@ package se.klandestino.flash.videoplayer {
 		//--------------------------------------
 
 		public function connect (url:String = null):void {
+			Debug.debug ('Connecting to ' + url);
+
 			if (this.connection != null) {
 				this.connection.removeEventListener (NetStatusEvent.NET_STATUS, this.connectionStatusHandler);
 				this.connection = null;
@@ -174,6 +176,7 @@ package se.klandestino.flash.videoplayer {
 					this.video.attachNetStream (this.stream);
 
 					this._loaded = true;
+					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.LOADED));
 					this.execPostLoadActions ();
 				} else {
 					Debug.warn ('Already loading/loaded video from ' + url);
@@ -249,6 +252,7 @@ package se.klandestino.flash.videoplayer {
 
 			switch (event.info.code) {
 				case "NetConnection.Connect.Success":
+					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.CONNECTED));
 					this.execPostConnectActions ();
 				break;
 			}
@@ -322,6 +326,7 @@ package se.klandestino.flash.videoplayer {
 				case 'NetStream.Play.Start':
 					this.playbackStop = false;
 					this.bufferFull = false;
+					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.PLAY));
 					break;
 
 				case 'NetStream.Play.Stop':
@@ -336,6 +341,7 @@ package se.klandestino.flash.videoplayer {
 							this.seek (0);
 						} else {
 							this.stop ();
+							this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.STOP));
 						}
 					}
 
@@ -351,13 +357,15 @@ package se.klandestino.flash.videoplayer {
 						} else {
 							Debug.debug ('Playback stopped, stopping playback');
 							this.stop ();
+							this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.STOP));
 						}
 					} else {
-						//Debug.debug ('Buffer empty, setting up loader until buffer is full again');
+						this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.BUFFER_EMPTY));
 					}
 					break;
 				case 'NetStream.Buffer.Full':
 					this.bufferFull = true;
+					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.BUFFER_FULL));
 					break;
 				case 'NetStream.Play.FileStructureInvalid':
 					//

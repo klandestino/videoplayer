@@ -48,12 +48,15 @@ package  {
 			Debug.addLogger (new TraceLogger ());
 			//Debug.addLogger (new NullLogger ());
 
+			this.setupLoader ();
+
 			this.getParams ();
 
 			this.videoplayer = new Videoplayer ();
-			this.addEventListener (Event.RESIZE, this.videoResizeHandler, true, 0, true);
-			//this.addEventListener (VideoplayerEvent.BUFFER_EMPTY, this.videoBufferEmptyHandler, true, 0, true);
-			//this.addEventListener (VideoplayerEvent.BUFFER_FULL, this.videoBufferFullHandler, true, 0, true);
+			this.videoplayer.addEventListener (Event.RESIZE, this.videoResizeHandler, false, 0, true);
+			this.videoplayer.addEventListener (VideoplayerEvent.BUFFER_EMPTY, this.videoBufferEmptyHandler, false, 0, true);
+			this.videoplayer.addEventListener (VideoplayerEvent.BUFFER_FULL, this.videoBufferFullHandler, false, 0, true);
+			this.videoplayer.addEventListener (VideoplayerEvent.LOADED, this.videoLoadedHandler, false, 0, true);
 			this.videoplayer.repeat = this.repeat;
 			this.videoplayer.connect (StringUtil.isEmpty (this.rmtp) ? null : this.rmtp);
 			this.videoplayer.load (this.url);
@@ -82,7 +85,7 @@ package  {
 		private var jsCallback:String;
 		private var loader:Sprite;
 		private var repeat:Boolean = false;
-		private var rmtp:String = '';
+		private var rmtp:String;
 		private var url:String;
 		private var videoplayer:Videoplayer;
 
@@ -105,6 +108,22 @@ package  {
 			}
 
 			this.setupVideoPositions ();
+			this.setupLoaderPositions ();
+		}
+
+		private function videoBufferEmptyHandler (event:VideoplayerEvent):void {
+			Debug.debug ('Buffer empty, setting up loader');
+			this.setupLoader ();
+		}
+
+		private function videoBufferFullHandler (event:VideoplayerEvent):void {
+			Debug.debug ('Buffer full, removing loader');
+			this.removeLoader ();
+		}
+
+		private function videoLoadedHandler (event:VideoplayerEvent):void {
+			Debug.debug ('Video loaded, removing loader');
+			this.removeLoader ();
 		}
 
 		private function videoResizeHandler (event:Event):void {
@@ -117,6 +136,7 @@ package  {
 			}
 
 			this.setupVideoPositions ();
+			this.setupLoaderPositions ();
 		}
 
 		//--------------------------------------
