@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<videoplayer>
+	<param name="autoplay" value="true" />
+	<param name="autosize" value="true" />
+	<param name="repeat" value="false" />
+	<images>
+		<play src="images/play.png" />
+		<pause src="images/pause.png" />
+	</images>
+</videoplayer>
