@@ -48,8 +48,8 @@ package  {
 		public function Main () {
 			super ();
 
-			Debug.addLogger (new TraceLogger ());
-			//Debug.addLogger (new NullLogger ());
+			//Debug.addLogger (new TraceLogger ());
+			Debug.addLogger (new NullLogger ());
 
 			this.loadConfig ();
 
