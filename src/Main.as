@@ -10,7 +10,8 @@ package  {
 	import se.klandestino.flash.debug.loggers.TraceLogger;
 	import se.klandestino.flash.utils.LoaderInfoParams;
 	import se.klandestino.flash.utils.StringUtil;
-	import se.klandestino.videoplayer.Videoplayer;
+	import se.klandestino.flash.videoplayer.events.VideoplayerEvent;
+	import se.klandestino.flash.videoplayer.Videoplayer;
 
 	/**
 	 *	Sprite sub class description.
@@ -27,7 +28,12 @@ package  {
 		// CLASS CONSTANTS
 		//--------------------------------------
 
+		[Embed(source="../assets/loader.swf")]
+		private var loaderMovieClass:Class;
+
 		public static const CALLBACK_RESIZE:String = 'resize';
+		public static const CONFIG_XML_FILE:String = 'videoplayer.xml';
+		public static const CONFIG_ZIP_FILE:String = 'videplayer.zip';
 
 		//--------------------------------------
 		//  CONSTRUCTOR
@@ -46,7 +52,10 @@ package  {
 
 			this.videoplayer = new Videoplayer ();
 			this.addEventListener (Event.RESIZE, this.videoResizeHandler, true, 0, true);
+			//this.addEventListener (VideoplayerEvent.BUFFER_EMPTY, this.videoBufferEmptyHandler, true, 0, true);
+			//this.addEventListener (VideoplayerEvent.BUFFER_FULL, this.videoBufferFullHandler, true, 0, true);
 			this.videoplayer.repeat = this.repeat;
+			this.videoplayer.connect (StringUtil.isEmpty (this.rmtp) ? null : this.rmtp);
 			this.videoplayer.load (this.url);
 			this.addChild (this.videoplayer);
 
@@ -71,7 +80,9 @@ package  {
 		private var autoplay:Boolean = true;
 		private var autosize:Boolean = true;
 		private var jsCallback:String;
+		private var loader:Sprite;
 		private var repeat:Boolean = false;
+		private var rmtp:String = '';
 		private var url:String;
 		private var videoplayer:Videoplayer;
 
@@ -117,12 +128,41 @@ package  {
 			this.autosize = LoaderInfoParams.getParam (this.stage.loaderInfo, 'autosize', this.autosize);
 			this.jsCallback = LoaderInfoParams.getParam (this.stage.loaderInfo, 'callback', '');
 			this.repeat = LoaderInfoParams.getParam (this.stage.loaderInfo, 'repeat', this.repeat);
+			this.rmtp = LoaderInfoParams.getParam (this.stage.loaderInfo, 'rmtp', '');
 			this.url = LoaderInfoParams.getParam (this.stage.loaderInfo, 'url', '');
 		}
 
 		private function setupVideoPositions ():void {
 			this.videoplayer.x = (this.videoplayer.width - this.stage.stageWidth) / 2;
 			this.videoplayer.y = (this.videoplayer.height - this.stage.stageHeight) / 2;
+		}
+
+		private function setupLoader ():void {
+			if (this.loader == null) {
+				this.loader = Sprite (new loaderMovieClass ());
+			}
+
+			if (this.loader.parent != null) {
+				this.removeChild (this.loader);
+			}
+
+			this.setupLoaderPositions ();
+			this.addChild (this.loader);
+		}
+
+		private function setupLoaderPositions ():void {
+			if (this.loader != null) {
+				this.loader.x = (this.stage.stageWidth - this.loader.width) / 2;
+				this.loader.y = (this.stage.stageHeight - this.loader.height) / 2;
+			}
+		}
+
+		private function removeLoader ():void {
+			if (this.loader != null) {
+				if (this.loader.parent != null) {
+					this.removeChild (this.loader);
+				}
+			}
 		}
 
 		private function sendCallback (type:String, ... args):void {

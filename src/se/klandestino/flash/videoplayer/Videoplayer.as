@@ -1,4 +1,4 @@
-package se.klandestino.videoplayer {
+package se.klandestino.flash.videoplayer {
 
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -10,6 +10,7 @@ package se.klandestino.videoplayer {
 	import se.klandestino.flash.debug.Debug;
 	import se.klandestino.flash.events.NetStreamClientEvent;
 	import se.klandestino.flash.net.NetStreamClient;
+	import se.klandestino.flash.videoplayer.events.VideoplayerEvent;
 
 	/**
 	 *	Sprite sub class description.
@@ -26,9 +27,6 @@ package se.klandestino.videoplayer {
 		// CLASS CONSTANTS
 		//--------------------------------------
 
-		[Embed(source="../../../../assets/loader.swf")]
-		private var loaderMovieClass:Class;
-
 		//--------------------------------------
 		//  CONSTRUCTOR
 		//--------------------------------------
@@ -39,12 +37,9 @@ package se.klandestino.videoplayer {
 		public function Videoplayer () {
 			super ();
 
-			this.setupLoader ();
-
 			this.postConnectActions = new Array ();
 			this.postLoadActions = new Array ();
 
-			this.setupConnection ();
 			this.setupVideo ();
 		}
 
@@ -57,7 +52,6 @@ package se.klandestino.videoplayer {
 		private var connection:NetConnection;
 		private var _duration:Number = 0;
 		private var _loaded:Boolean;
-		private var loader:Sprite;
 		private var playbackStop:Boolean = true;
 		private var postConnectActions:Array;
 		private var postLoadActions:Array;
@@ -81,6 +75,14 @@ package se.klandestino.videoplayer {
 			this._buffer = val;
 		}
 
+		public function get connected ():Boolean {
+			if (this.connection != null) {
+				return this.connection.connected;
+			}
+
+			return false;
+		}
+
 		public function get duration ():Number {
 			return this._duration;
 		}
@@ -95,8 +97,6 @@ package se.klandestino.videoplayer {
 			if (this.video != null) {
 				this.video.height = val;
 			}
-
-			this.setupLoaderPositions ();
 		}
 
 		public function get loaded ():Boolean {
@@ -125,8 +125,6 @@ package se.klandestino.videoplayer {
 			if (this.video != null) {
 				this.video.width = val;
 			}
-
-			this.setupLoaderPositions ();
 		}
 
 		public function get videoHeight ():Number {
@@ -140,6 +138,17 @@ package se.klandestino.videoplayer {
 		//--------------------------------------
 		//  PUBLIC METHODS
 		//--------------------------------------
+
+		public function connect (url:String = null):void {
+			if (this.connection != null) {
+				this.connection.removeEventListener (NetStatusEvent.NET_STATUS, this.connectionStatusHandler);
+				this.connection = null;
+			}
+
+			this.connection = new NetConnection ();
+			this.connection.addEventListener (NetStatusEvent.NET_STATUS, this.connectionStatusHandler, false, 0, true);
+			this.connection.connect (url);
+		}
 
 		public function load (url:String):void {
 			if (this.connection.connected) {
@@ -176,8 +185,6 @@ package se.klandestino.videoplayer {
 
 		public function play ():void {
 			Debug.debug ('Playing video from ' + this.url);
-
-			this.setupLoader ();
 
 			if (this.loaded) {
 				this.stream.play (this.url);
@@ -242,7 +249,6 @@ package se.klandestino.videoplayer {
 
 			switch (event.info.code) {
 				case "NetConnection.Connect.Success":
-					this.removeLoader ();
 					this.execPostConnectActions ();
 				break;
 			}
@@ -314,7 +320,6 @@ package se.klandestino.videoplayer {
 
 			switch (event.info.code) {
 				case 'NetStream.Play.Start':
-					this.removeLoader ();
 					this.playbackStop = false;
 					this.bufferFull = false;
 					break;
@@ -348,12 +353,10 @@ package se.klandestino.videoplayer {
 							this.stop ();
 						}
 					} else {
-						Debug.debug ('Buffer empty, setting up loader until buffer is full again');
-						this.setupLoader ();
+						//Debug.debug ('Buffer empty, setting up loader until buffer is full again');
 					}
 					break;
 				case 'NetStream.Buffer.Full':
-					this.removeLoader ();
 					this.bufferFull = true;
 					break;
 				case 'NetStream.Play.FileStructureInvalid':
@@ -396,47 +399,10 @@ package se.klandestino.videoplayer {
 		//  PRIVATE & PROTECTED INSTANCE METHODS
 		//--------------------------------------
 
-		private function setupConnection ():void {
-			if (this.connection == null) {
-				this.connection = new NetConnection ();
-				this.connection.addEventListener (NetStatusEvent.NET_STATUS, this.connectionStatusHandler, false, 0, true);
-				this.connection.connect (null);
-			}
-		}
-
-		private function setupLoader ():void {
-			if (this.loader == null) {
-				this.loader = Sprite (new loaderMovieClass ());
-			}
-
-			if (this.loader.parent != null) {
-				this.removeChild (this.loader);
-			}
-
-			this.setupLoaderPositions ();
-			this.addChild (this.loader);
-		}
-
-		private function setupLoaderPositions ():void {
-			if (this.loader != null) {
-				this.loader.x = (this.width - this.loader.width) / 2;
-				this.loader.y = (this.height - this.loader.height) / 2;
-			}
-		}
-
-		private function removeLoader ():void {
-			if (this.loader != null) {
-				if (this.loader.parent != null) {
-					this.removeChild (this.loader);
-				}
-			}
-		}
-
 		private function setupVideo ():void {
 			if (this.video == null) {
 				this.video = new Video ();
 				this.addChild (this.video);
-				this.setupLoaderPositions ();
 			}
 		}
 
