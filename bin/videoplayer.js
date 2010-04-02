@@ -32,7 +32,9 @@ var videoplayer = {
 			url: jElm.attr ('data_videoplayer'),
 			autoplay: jElm.attr ('data_autoplay'),
 			autosize: jElm.attr ('data_autosize'),
-			repeat: jElm.attr ('data_repeat')
+			config: jElm.attr ('data_config'),
+			repeat: jElm.attr ('data_repeat'),
+			rmtp: jElm.attr ('data_rmtp')
 		};
 
 		var width = jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width;

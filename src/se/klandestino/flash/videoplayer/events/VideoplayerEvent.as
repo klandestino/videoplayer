@@ -20,6 +20,7 @@ package se.klandestino.flash.videoplayer.events {
 		public static const BUFFER_FULL:String = 'buffer full';
 		public static const CONNECTED:String = 'connected';
 		public static const LOADED:String = 'loaded';
+		public static const PAUSE:String = 'pause';
 		public static const PLAY:String = 'play';
 		public static const RESUME:String = 'resume';
 		public static const STOP:String = 'stop';

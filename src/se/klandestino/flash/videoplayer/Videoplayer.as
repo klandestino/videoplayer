@@ -47,7 +47,8 @@ package se.klandestino.flash.videoplayer {
 		//  PRIVATE VARIABLES
 		//--------------------------------------
 
-		private var _buffer:uint = 2;
+		private var _autosize:Boolean = false;
+		private var _buffer:uint = 10;
 		private var bufferFull:Boolean = false;
 		private var connection:NetConnection;
 		private var _duration:Number = 0;
@@ -67,6 +68,18 @@ package se.klandestino.flash.videoplayer {
 		//--------------------------------------
 		//  GETTER/SETTERS
 		//--------------------------------------
+
+		public function get autosize ():Boolean {
+			return this._autosize;
+		}
+
+		public function set autosize (val:Boolean):void {
+			this._autosize = val;
+
+			if (this.autosize) {
+				this.setSizeByVideo ();
+			}
+		}
 
 		public function get buffer ():uint {
 			return this._buffer;
@@ -98,6 +111,8 @@ package se.klandestino.flash.videoplayer {
 			if (this.video != null) {
 				this.video.height = val;
 			}
+
+			this.dispatchEvent (new Event (Event.RESIZE));
 		}
 
 		public function get loaded ():Boolean {
@@ -126,6 +141,8 @@ package se.klandestino.flash.videoplayer {
 			if (this.video != null) {
 				this.video.width = val;
 			}
+
+			this.dispatchEvent (new Event (Event.RESIZE));
 		}
 
 		public function get videoHeight ():Number {
@@ -194,6 +211,7 @@ package se.klandestino.flash.videoplayer {
 			if (this.loaded) {
 				this.stream.seek (0);
 				this.stream.resume ();
+				this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.PLAY));
 			} else {
 				this.addPostLoadAction (this.play);
 			}
@@ -204,6 +222,7 @@ package se.klandestino.flash.videoplayer {
 
 			if (this.loaded) {
 				this.stream.pause ();
+				this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.PAUSE));
 			} else {
 				this.addPostLoadAction (this.pause);
 			}
@@ -214,6 +233,7 @@ package se.klandestino.flash.videoplayer {
 
 			if (this.loaded) {
 				this.stream.resume ();
+				this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.RESUME));
 			} else {
 				this.addPostLoadAction (this.resume);
 			}
@@ -235,7 +255,9 @@ package se.klandestino.flash.videoplayer {
 			Debug.debug ('Stopping video from ' + this.url);
 
 			if (this.loaded) {
-				this.stream.close ();
+				this.stream.pause ();
+				this.stream.seek (0);
+				this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.STOP));
 			} else {
 				this.addPostLoadAction (this.stop);
 			}
@@ -314,9 +336,9 @@ package se.klandestino.flash.videoplayer {
 				}
 			}
 
-			if (this._videoWidth > 0 && this._videoHeight > 0) {
-				Debug.debug ('New size found, dispatch resize event');
-				this.dispatchEvent (new Event (Event.RESIZE));
+			if (this._videoWidth > 0 && this._videoHeight > 0 && this.autosize) {
+				Debug.debug ('New size found and autosize is enabled');
+				this.setSizeByVideo ();
 			}
 
 			Debug.debug (data);
@@ -333,7 +355,6 @@ package se.klandestino.flash.videoplayer {
 				case 'NetStream.Play.Start':
 					this.playbackStop = false;
 					this.bufferFull = false;
-					this.dispatchEvent (new VideoplayerEvent (VideoplayerEvent.PLAY));
 					break;
 
 				case 'NetStream.Play.Stop':
