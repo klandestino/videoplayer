@@ -26,6 +26,9 @@ package se.klandestino.videoplayer {
 		// CLASS CONSTANTS
 		//--------------------------------------
 
+		[Embed(source="../../../../assets/loader.swf")]
+		private var loaderMovieClass:Class;
+
 		//--------------------------------------
 		//  CONSTRUCTOR
 		//--------------------------------------
@@ -35,6 +38,8 @@ package se.klandestino.videoplayer {
 		 */
 		public function Videoplayer () {
 			super ();
+
+			this.setupLoader ();
 
 			this.postConnectActions = new Array ();
 			this.postLoadActions = new Array ();
@@ -52,6 +57,7 @@ package se.klandestino.videoplayer {
 		private var connection:NetConnection;
 		private var _duration:Number = 0;
 		private var _loaded:Boolean;
+		private var loader:Sprite;
 		private var playbackStop:Boolean = true;
 		private var postConnectActions:Array;
 		private var postLoadActions:Array;
@@ -80,7 +86,7 @@ package se.klandestino.videoplayer {
 		}
 
 		override public function get height ():Number {
-			return this.video != null ? this.video.height : 0;
+			return this.video != null ? this.video.height : super.height;
 		}
 
 		override public function set height (val:Number):void {
@@ -89,6 +95,8 @@ package se.klandestino.videoplayer {
 			if (this.video != null) {
 				this.video.height = val;
 			}
+
+			this.setupLoaderPositions ();
 		}
 
 		public function get loaded ():Boolean {
@@ -108,7 +116,7 @@ package se.klandestino.videoplayer {
 		}
 
 		override public function get width ():Number {
-			return this.video != null ? this.video.width : 0;
+			return this.video != null ? this.video.width : super.width;
 		}
 
 		override public function set width (val:Number):void {
@@ -117,6 +125,8 @@ package se.klandestino.videoplayer {
 			if (this.video != null) {
 				this.video.width = val;
 			}
+
+			this.setupLoaderPositions ();
 		}
 
 		public function get videoHeight ():Number {
@@ -166,6 +176,8 @@ package se.klandestino.videoplayer {
 
 		public function play ():void {
 			Debug.debug ('Playing video from ' + this.url);
+
+			this.setupLoader ();
 
 			if (this.loaded) {
 				this.stream.play (this.url);
@@ -230,6 +242,7 @@ package se.klandestino.videoplayer {
 
 			switch (event.info.code) {
 				case "NetConnection.Connect.Success":
+					this.removeLoader ();
 					this.execPostConnectActions ();
 				break;
 			}
@@ -301,6 +314,7 @@ package se.klandestino.videoplayer {
 
 			switch (event.info.code) {
 				case 'NetStream.Play.Start':
+					this.removeLoader ();
 					this.playbackStop = false;
 					this.bufferFull = false;
 					break;
@@ -331,10 +345,13 @@ package se.klandestino.videoplayer {
 							this.stop ();
 						}
 					} else {
+						Debug.debug ('Buffer empty, setting up loader until buffer is full again');
+						this.setupLoader ();
 						this.bufferFull = false;
 					}
 					break;
 				case 'NetStream.Buffer.Full':
+					this.removeLoader ();
 					this.bufferFull = true;
 					break;
 				case 'NetStream.Play.FileStructureInvalid':
@@ -385,10 +402,39 @@ package se.klandestino.videoplayer {
 			}
 		}
 
+		private function setupLoader ():void {
+			if (this.loader == null) {
+				this.loader = Sprite (new loaderMovieClass ());
+			}
+
+			if (this.loader.parent != null) {
+				this.removeChild (this.loader);
+			}
+
+			this.setupLoaderPositions ();
+			this.addChild (this.loader);
+		}
+
+		private function setupLoaderPositions ():void {
+			if (this.loader != null) {
+				this.loader.x = (this.width - this.loader.width) / 2;
+				this.loader.y = (this.height - this.loader.height) / 2;
+			}
+		}
+
+		private function removeLoader ():void {
+			if (this.loader != null) {
+				if (this.loader.parent != null) {
+					this.removeChild (this.loader);
+				}
+			}
+		}
+
 		private function setupVideo ():void {
 			if (this.video == null) {
 				this.video = new Video ();
 				this.addChild (this.video);
+				this.setupLoaderPositions ();
 			}
 		}
 

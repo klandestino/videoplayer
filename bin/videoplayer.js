@@ -31,14 +31,15 @@ var videoplayer = {
 			callback: 'videoplayer.generateCallback ("' + id + '")',
 			url: jElm.attr ('data_videoplayer'),
 			autoplay: jElm.attr ('data_autoplay'),
-			autoplay: jElm.attr ('data_autosize'),
+			autosize: jElm.attr ('data_autosize'),
 			repeat: jElm.attr ('data_repeat')
 		};
 
-		jElm.replaceWith ('<div id="' + id + '"></div>');
-		swfobject.embedSWF (videoplayer.swf, id, '100%', '100%', '10.0.0', null, params);
-		jQuery ('#' + id).width (jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width);
-		jQuery ('#' + id).height (jElm.attr ('height') != null ? jElm.attr ('height') : videoplayer.height);
+		var width = jElm.attr ('width') != null ? jElm.attr ('width') : videoplayer.width;
+		var height = jElm.attr ('height') != null ? jElm.attr ('height') : videoplayer.height;
+
+		jElm.replaceWith ('<div id="' + id + '" style="width:' + width + 'px;height:' + height + 'px;"><div id="' + id + '_flash"></div></div>');
+		swfobject.embedSWF (videoplayer.swf, id + '_flash', '100%', '100%', '10.0.0', null, params);
 
 		if (params.callback != null) {
 			eval (params.callback + '("started", "' + id + '");');

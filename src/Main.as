@@ -53,7 +53,6 @@ package  {
 			this.stage.scaleMode = StageScaleMode.NO_SCALE;
 			this.stage.align = StageAlign.TOP_LEFT;
 			this.stage.addEventListener (Event.RESIZE, this.stageResizeHandler, false, 0, true);
-			this.stage.dispatchEvent (new Event (Event.RESIZE));
 
 			if (this.autoplay) {
 				Debug.debug ('Autoplay is true, start playing');
@@ -61,6 +60,8 @@ package  {
 			} else {
 				Debug.debug ('Autoplay is false, waiting for interaction to start playing');
 			}
+
+			this.stage.dispatchEvent (new Event (Event.RESIZE));
 		}
 
 		//--------------------------------------
@@ -91,6 +92,8 @@ package  {
 				this.videoplayer.width = this.stage.stageWidth;
 				this.videoplayer.height = this.stage.stageHeight;
 			}
+
+			this.setupVideoPositions ();
 		}
 
 		private function videoResizeHandler (event:Event):void {
@@ -101,6 +104,8 @@ package  {
 			} else {
 				Debug.debug ('New size from video but autosize is not enabled');
 			}
+
+			this.setupVideoPositions ();
 		}
 
 		//--------------------------------------
@@ -113,6 +118,11 @@ package  {
 			this.jsCallback = LoaderInfoParams.getParam (this.stage.loaderInfo, 'callback', '');
 			this.repeat = LoaderInfoParams.getParam (this.stage.loaderInfo, 'repeat', this.repeat);
 			this.url = LoaderInfoParams.getParam (this.stage.loaderInfo, 'url', '');
+		}
+
+		private function setupVideoPositions ():void {
+			this.videoplayer.x = (this.videoplayer.width - this.stage.stageWidth) / 2;
+			this.videoplayer.y = (this.videoplayer.height - this.stage.stageHeight) / 2;
 		}
 
 		private function sendCallback (type:String, ... args):void {
