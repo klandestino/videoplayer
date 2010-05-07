@@ -106,12 +106,14 @@ package  {
 		private function configCompleteHandler (event:Event):void {
 			Debug.debug ('Config file loaded, adding params to config object');
 			this.setParamsToConfig ();
+			this.stage.dispatchEvent (new Event (Event.RESIZE));
 			this.start ();
 		}
 
 		private function configErrorHandler (event:Event):void {
 			Debug.warn ('Error while loading config file, adding params to config object');
 			this.setParamsToConfig ();
+			this.stage.dispatchEvent (new Event (Event.RESIZE));
 			this.start ();
 		}
 
